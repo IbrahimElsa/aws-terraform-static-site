@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ibrahim Elsawalhi | Infrastructure and security</title>
+<meta name="description" content="Portfolio of Ibrahim Elsawalhi. This site is provisioned on AWS with Terraform: a private S3 bucket behind CloudFront.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sheet: #E8EEF3;
+    --paper: #F8FBFD;
+    --ink: #12223B;
+    --ink-soft: #46566E;
+    --line: #2B5FA8;
+    --live: #C97700;
+    --rule: rgba(18, 34, 59, 0.22);
+    --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+    --display: "Barlow Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background-color: var(--sheet);
+    background-image:
+      linear-gradient(rgba(43, 95, 168, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(43, 95, 168, 0.07) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+  }
+
+  a { color: var(--line); text-underline-offset: 3px; }
+  a:hover { color: var(--ink); }
+  a:focus-visible { outline: 3px solid var(--live); outline-offset: 3px; }
+
+  .sheet {
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 2.5rem;
+  }
+
+  /* Header */
+  .intro h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(3rem, 9vw, 5.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    margin: 0 0 1rem;
+  }
+  .intro p {
+    max-width: 38rem;
+    margin: 0 0 1.5rem;
+    font-size: 1.1875rem;
+    color: var(--ink-soft);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    font-weight: 500;
+  }
+
+  /* Request path diagram */
+  .diagram {
+    margin: 3rem 0 0;
+    padding: 1.75rem 1.5rem 1.5rem;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+  }
+  .diagram h2 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin: 0 0 1.5rem;
+  }
+  .path {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  .node {
+    flex: 0 0 auto;
+    min-width: 9.5rem;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--ink);
+    background: var(--sheet);
+  }
+  .node strong {
+    display: block;
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.375rem;
+    line-height: 1.15;
+  }
+  .node span {
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+  .wire {
+    flex: 1 1 5rem;
+    position: relative;
+    align-self: stretch;
+    min-height: 3.5rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .wire span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--live);
+    padding: 0 0.5rem;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .wire::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--live) 0 8px, transparent 8px 16px);
+    background-size: 16px 2px;
+    animation: flow 0.9s linear infinite;
+  }
+  @keyframes flow { to { background-position: 16px 0; } }
+
+  .provision {
+    margin: 1.5rem 0 0;
+    padding-top: 1rem;
+    border-top: 1.5px dashed var(--line);
+    color: var(--ink-soft);
+    max-width: 44rem;
+  }
+
+  /* Content sections */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-top: 3.5rem;
+  }
+  .cols h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 2rem;
+    line-height: 1.1;
+    margin: 0 0 1.25rem;
+  }
+  .entries { margin: 0; }
+  .entries dt {
+    font-weight: 600;
+    margin-top: 1.25rem;
+  }
+  .entries dt:first-child { margin-top: 0; }
+  .entries dd {
+    margin: 0.25rem 0 0;
+    color: var(--ink-soft);
+  }
+
+  .background {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+  }
+  .background h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 2rem;
+    line-height: 1.1;
+    margin: 0 0 1rem;
+  }
+  .background ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--ink-soft);
+  }
+  .background li { margin-bottom: 0.375rem; }
+
+  /* Drawing title block */
+  .titleblock {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 2fr;
+    margin-top: 4rem;
+    border: 1.5px solid var(--ink);
+    background: var(--paper);
+    font-size: 0.9375rem;
+  }
+  .titleblock div {
+    padding: 0.625rem 0.875rem;
+    border-left: 1.5px solid var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .titleblock div:first-child { border-left: 0; }
+  .titleblock small {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 720px) {
+    .sheet { padding-top: 2rem; }
+    .path { flex-direction: column; align-items: stretch; }
+    .wire {
+      flex: 0 0 auto;
+      min-height: 3.75rem;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 2.25rem;
+    }
+    .wire span { text-align: left; }
+    .wire::after {
+      left: 1.25rem;
+      right: auto;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      height: auto;
+      background: repeating-linear-gradient(180deg, var(--live) 0 8px, transparent 8px 16px);
+      background-size: 2px 16px;
+      animation-name: flow-down;
+    }
+    .cols { grid-template-columns: 1fr; gap: 2.5rem; }
+    .titleblock { grid-template-columns: 1fr 1fr; }
+    .titleblock div:nth-child(3) { border-left: 0; }
+    .titleblock div:nth-child(n+3) { border-top: 1.5px solid var(--ink); }
+  }
+  @keyframes flow-down { to { background-position: 0 16px; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wire::after { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main class="sheet">
+
+  <header class="intro">
+    <h1>Ibrahim Elsawalhi</h1>
+    <p>IT graduate and systems and security master's student in Tampa. I build infrastructure, on AWS and on hardware I run myself, and I write down why I built it that way.</p>
+    <ul class="links">
+      <li><a href="resume.pdf">Download resume (PDF)</a></li>
+      <li><a href="https://github.com/IbrahimElsa">GitHub</a></li>
+      <!-- TODO: replace with your LinkedIn URL -->
+      <li><a href="https://www.linkedin.com/in/YOUR-HANDLE">LinkedIn</a></li>
+      <!-- TODO: confirm this is the address you want public -->
+      <li><a href="mailto:ibrahim.elsawalhi@outlook.com">ibrahim.elsawalhi@outlook.com</a></li>
+    </ul>
+  </header>
+
+  <section class="diagram" aria-labelledby="path-title">
+    <h2 id="path-title">How this page just reached you</h2>
+    <ol class="path">
+      <li class="node"><strong>Your browser</strong><span>anywhere</span></li>
+      <li class="wire" aria-label="over HTTPS to"><span>HTTPS only</span></li>
+      <li class="node"><strong>CloudFront</strong><span>edge cache, TLS</span></li>
+      <li class="wire" aria-label="signed request through Origin Access Control to"><span>signed request, Origin Access Control</span></li>
+      <li class="node"><strong>S3 bucket</strong><span>private, us-east-2</span></li>
+    </ol>
+    <p class="provision">Every piece of that path is declared in Terraform. State is stored remotely in a separate S3 bucket with lockfile locking, and the code is public: <a href="https://github.com/IbrahimElsa/aws-terraform-static-site">aws-terraform-static-site</a>.</p>
+  </section>
+
+  <div class="cols">
+    <section aria-labelledby="decisions-title">
+      <h2 id="decisions-title">Design decisions</h2>
+      <dl class="entries">
+        <dt>The bucket is private</dt>
+        <dd>All public access is blocked. The bucket policy lets exactly one CloudFront distribution read objects, so there is no way to reach the content except over HTTPS through the edge.</dd>
+        <dt>State lives in S3, not on a laptop</dt>
+        <dd>Remote state means the infrastructure can be managed from any machine, and S3's native lockfile stops two applies from running at once.</dd>
+        <dt>State never touches the repository</dt>
+        <dd>State and variable files are gitignored, and the state bucket is separate from the bucket that serves this page.</dd>
+        <dt>Next: keyless deploys</dt>
+        <dd>A GitHub Actions pipeline that assumes an AWS role through OIDC, so no long-lived access keys exist anywhere.</dd>
+      </dl>
+    </section>
+
+    <section aria-labelledby="work-title">
+      <h2 id="work-title">Other work</h2>
+      <dl class="entries">
+        <dt>Home infrastructure lab</dt>
+        <dd>A three-node Proxmox cluster with high availability and ZFS replication. OPNsense firewall with threat intelligence feeds, split DNS, and mesh VPN for remote access. Addressing and devices are documented in NetBox.</dd>
+        <dt>folio.dev</dt>
+        <dd>A multi-tenant SaaS application. Tenant isolation is enforced with PostgreSQL row-level security, and releases ship through GitHub Actions CI/CD.</dd>
+        <dt>Traceroute map</dt>
+        <dd>Plots the hops of a network route on a world map, to make the path traffic takes visible.</dd>
+      </dl>
+    </section>
+  </div>
+
+  <section class="background" aria-labelledby="bg-title">
+    <h2 id="bg-title">Background</h2>
+    <ul>
+      <li>Information Technology, University of South Florida, graduated December 2024</li>
+      <li>Master of Science in Electrical Engineering, Systems and Security, University of South Florida, in progress</li>
+      <li>Studying for the Cisco CCNA</li>
+    </ul>
+  </section>
+
+  <footer class="titleblock">
+    <div><small>Built by</small>Ibrahim Elsawalhi</div>
+    <div><small>Region</small>us-east-2</div>
+    <div><small>Provisioned with</small>Terraform</div>
+    <div><small>Source</small><a href="https://github.com/IbrahimElsa/aws-terraform-static-site">github.com/IbrahimElsa/aws-terraform-static-site</a></div>
+  </footer>
+
+</main>
+</body>
+</html>
